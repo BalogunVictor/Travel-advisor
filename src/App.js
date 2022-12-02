@@ -1,7 +1,7 @@
 import { CssBaseline,Grid } from "@material-ui/core";
 import { useEffect,useState } from "react";
 
-import { getPlacesData } from "./api";
+import { getPlacesData, getWeatherData  } from "./api";
 import Header from "./Header/Header";
 import List from "./List/List";
 import Map from "./Map/Map";
@@ -9,11 +9,20 @@ import Map from "./Map/Map";
 function App() {
 
   const [places, setPlaces] = useState([]);
+  const [childClicked, setChildClicked] = useState(null);
+  const [type, setType] = useState('restaurants');
 
   const [coordinates, setCoordinates] = useState({});
   const [bounds, setBounds] = useState(null);
 
-  const [childClicked, setChildClicked] = useState(null);
+  const [weatherData, setWeatherData] = useState([]);
+  const [filteredPlaces, setFilteredPlaces] = useState([]);
+
+  const [autocomplete, setAutocomplete] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [rating, setRating] = useState('');
+
+  
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(({ coords: { latitude, longitude } }) => {
@@ -22,16 +31,21 @@ function App() {
   }, []);
 
   useEffect(() => {
-    console.log(coordinates,bounds);
+    if (bounds) {
+      setIsLoading(true);
 
-  getPlacesData(bounds.sw, bounds.ne)
-  .then((data) => {
-    console.log(data);
+      getWeatherData(coordinates.lat, coordinates.lng)
+        .then((data) => setWeatherData(data));
 
-    setPlaces(data);
-  })
-
-  },[coordinates, bounds])
+      getPlacesData(type, bounds.sw, bounds.ne)
+        .then((data) => {
+          setPlaces(data.filter((place) => place.name && place.num_reviews > 0));
+          setFilteredPlaces([]);
+          setRating('');
+          setIsLoading(false);
+        });
+    }
+  }, [bounds, coordinates ]);
 
   return (
     <>
@@ -42,6 +56,11 @@ function App() {
               <List 
               places={places}
               childClicked={childClicked}
+              isLoading={isLoading}
+              type={type}
+            setType={setType}
+            rating={rating}
+            setRating={setRating}
               />
           </Grid>
 
