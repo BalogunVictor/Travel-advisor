@@ -18,7 +18,6 @@ function App() {
   const [weatherData, setWeatherData] = useState([]);
   const [filteredPlaces, setFilteredPlaces] = useState([]);
 
-  const [autocomplete, setAutocomplete] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [rating, setRating] = useState('');
 
@@ -29,6 +28,12 @@ function App() {
       setCoordinates({ lat: latitude, lng: longitude });
     });
   }, []);
+
+  useEffect(() => {
+    const filtered = places.filter((place) => Number(place.rating) > rating);
+
+    setFilteredPlaces(filtered);
+  }, [rating]);
 
   useEffect(() => {
     if (bounds) {
@@ -45,16 +50,16 @@ function App() {
           setIsLoading(false);
         });
     }
-  }, [bounds, coordinates ]);
+  }, [type, bounds, coordinates ]);
 
   return (
     <>
         <CssBaseline />
-        <Header />
+        <Header  setCoordinates={setCoordinates} />
         <Grid container spacing={3} style={{ width: '100%'}}>
           <Grid item xs={12} md={4}>
               <List 
-              places={places}
+              places={filteredPlaces.length ? filteredPlaces : places}
               childClicked={childClicked}
               isLoading={isLoading}
               type={type}
@@ -69,9 +74,9 @@ function App() {
             setCoordinates = {setCoordinates}
             setBounds={setBounds}
             coordinates={coordinates}
-            places={places}
+            places={filteredPlaces.length ? filteredPlaces : places}
             setChildClicked={setChildClicked}
-             
+             weatherData={weatherData}
             />
           </Grid>
         </Grid>
